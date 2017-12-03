@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script>
+  window.onload = function(){
+    console.log("默认函数");
+    initIndexdDB("testDB",2,"employee","employeeId");
+  }
+  function operateClick(clickName){
+    let data,storeName="employee";
+    var rollNo = document.getElementsByName('rollNo');
+    var rollName = document.getElementsByName('rollName');
+    data = {
+      rollNo:rollNo,
+      name:rollName
+    }
+    //objectStore,purview,data
+    if(clickName==='add'){
+      console.log("新增数据"+storeName);
+      addRecord(storeName,"readwrite",data)
+    }
+    else if(clickName==='update'){
+      updateData(storeName,data);
+    }
+    else if(clickName==='delete'){
+      deleteData(storeName,data);
+    }
+    var dataList = getAllData(storeName);
+    console.log("获取全部数据");
+    console.log(dataList);
+  }
+  var db,request;
+    function initIndexdDB(dbname,version,storeName,keyPath,increment=false){
+      window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+      if(!window.indexedDB){
+        console.log("你的浏览器不支持IndexedDB");
+      }
+      request = window.indexedDB.open(dbname,version);
+      request.onerror = function(event){
+          console.log("打开DB失败", event);
+      };
+      request.onsuccess  = function(event){
+          console.log("成功打开DB");
+          db = event.target.result;
+      };
+      request.onupgradeneeded = function(event){
+          console.log("Upgrading");
+          db = event.target.result;
+          if(!increment)
+              var objectStore2 = database.createObjectStore(storeName, { keyPath: keyPath });
+          else
+              var objectStore2 = database.createObjectStore(storeName, { keyPath: keyPath ,autoIncrement: true});
+      };
+    }
+    //增加数据
+    function addRecord(storeName,purview,data){
+      let transaction = db.transaction([storeName],purview);
+      let objectStore = transaction.objectStore(storeName);
+      let request = objectStore.add({rollNo: data.rollNo, name: data.name});
+      request.onerror = function(event) {
+          console.log("发生错误：" + request.error);
+      };
+      request.onsuccess = function(event) {
+          console.log("添加成功");
+      };
+    }
+    //删除数据
+    function deleteData(storeName,data){
+      request = db.transaction([storeName],"readwrite").objectStore(storeName).delete(data.rollNo);
+      request.onsuccess = function(event){
+        console.log("删除成功");
+      }
+    }
+    //获取数据
+    function getData(storeName,data){
+      request = db.transaction([storeName],"read").objectStore(storeName).get(data.rollNo);
+    }
+    //获取全部数据
+    function getAllData(storeName){
+      request = db.transaction([storeName],"read").objectStore(storeName);
+      return request;
+    }
+    //更新数据
+    function updateData(storeName,data){
+      let transaction = db.transaction([storeName],"readwrite");
+      let objectStore = transaction.objectStore(storeName);
+      let request = objectStore.get(rollNo);
+      request.onsuccess = function(event){
+          request.result.name = name;
+          objectStore.put(request.result);
+      };
+    }
+    function closeDB() {
+        db.close();
+    }
+    function deleteDB(dbname) {
+        indexedDB.deleteDatabase(dbname);
+    }
+    function createTable(){
+
+    }
+  </script>
+</head>
+<body>
+<!-- https://segmentfault.com/a/1190000002416903 -->
+<!-- https://www.cnblogs.com/hoboStage/p/5099637.html -->
+<!-- https://www.cnblogs.com/smileberry/p/3844269.html -->
+<!-- http://blog.csdn.net/mrzzhou/article/details/54865748 -->
+<div class="">
+  <ul>
+    <li><label>rollNo</label><input type="text" name="rollNo" value=""></li>
+    <li><label for="">rollName</label><input type="text" name="rollName" value=""></li>
+    <li>
+      <button type="button" name="" onclick="operateClick('add')">新增</button>
+      <button type="button" name="" onclick="operateClick('update')">更新</button>
+    </li>
+    <li>
+      <button type="button" name="" onclick="operateClick('delete')">删除</button>
+      <button type="button" name="" onclick="operateClick('drop')">删除库</button>
+    </li>
+  </ul>
+
+
+  <table>
+    <thead>
+      <th>RollNo</th>
+      <th>RollName</th>
+    </thead>
+    <tbody>
+      <td></td>
+      <td></td>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
